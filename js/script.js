@@ -6,26 +6,8 @@ FSJS project 2 - List Filter and Pagination
 // Study guide for this project - https://drive.google.com/file/d/1OD1diUsTMdpfMDv677TfL1xO2CEkykSz/view?usp=sharing
 
 
-/*** 
-   Add your global variables that store the DOM elements you will 
-   need to reference and/or manipulate. 
-   
-   But be mindful of which variables should be global and which 
-   should be locally scoped to one of the two main functions you're 
-   going to create. A good general rule of thumb is if the variable 
-   will only be used inside of a function, then it can be locally 
-   scoped to that function.
-***/
 var studentList = document.querySelectorAll('li');
 let numOfItems = 10;
-/*** 
-<!-- student search HTML to add dynamically -->
-<div class="student-search">
-  <input placeholder="Search for students...">
-  <button>Search</button>
-</div>
-<!-- end search -->
-***/
 
 //Define variables for main page elements and pagination elements
 let pageDiv = document.querySelector('div.page');
@@ -46,8 +28,8 @@ searchForm.appendChild(searchInput);
 searchForm.appendChild(searchButton);
 searchDiv.appendChild(searchForm);
 document.querySelector('div.page-header.cf').appendChild(searchDiv);
-let searchResultsArr = [];
-//Define variable for paragraph element that contains text for when no search results are found.
+//Define variable for paragraph element that contains text for when 
+//no search results are found.
 //Set the display style for the element to 'none' by default
 let noSearchResults = document.createElement('p');
    noSearchResults.textContent = 'No results found';
@@ -55,42 +37,55 @@ let noSearchResults = document.createElement('p');
    pageDiv.appendChild(noSearchResults);
    pageDiv.insertBefore(noSearchResults, pageUL);
 
-/*** 
-   Create the `showPage` function to hide all of the items in the 
-   list except for the ten you want to show.
-
-   Pro Tips: 
-     - Keep in mind that with a list of 54 students, the last page 
-       will only display four.
-     - Remember that the first student has an index of 0.
-     - Remember that a function `parameter` goes in the parens when 
-       you initially define the function, and it acts as a variable 
-       or a placeholder to represent the actual function `argument` 
-       that will be passed into the parens later when you call or 
-       "invoke" the function 
-***/
+/**
+ * Define showPage function which takes 2 arguments: list and page
+ * list is an array which contains the list of students
+ * page is an integer representing the required result page to be displayed
+ * The function does not return any value
+ */
 function showPage(list, page) {
+   //startIndex and endIndex represent the first and last list items 
+   //in a given page
    let startIndex = numOfItems*page - numOfItems;
    let endIndex = numOfItems*page;
 
    for (let i = 0; i < list.length; i++) {
       if (i >= startIndex & i < endIndex) {
+         //Display the items that are within the index range of the given page
          list[i].style.display = '';
       } else {
+         //The rest of the list items will be invisible
          list[i].style.display = 'none';
       }
    }
 }
 
+/**
+ * Define the function appendPageLinks which takes 1 argument: list
+ * list is an array which contains the list of students 
+ * The function does not return any value
+ */
 function appendPageLinks(list) {
    let numOfPages = Math.floor(list.length / numOfItems) + 1;
-   // Define function which invokes the showPage function for the active anchor
+   /**
+    * Define the function showActivePage which takes no arguments
+    * The function returns a string listStr which contains the HTML text of the restultant list
+    */
    function showActivePage() {
+      //Call the function showPage, display the list items from the page of which the pagination
+      //link is set to Active
       for (let i = 0; i < paginationUL.children.length; i++) {
          if (paginationUL.children[i].children[0].className == 'active') {
             showPage(list, i+1);
          }
       }
+      //Initialize listStr and make it an empty string
+      let listStr = '';
+      //Assign the HTML content of the list UL to the listStr string
+      for (let i = 0; i < list.length;  i++) {
+         listStr += `${list[i].outerHTML} `;
+      }
+      return listStr;
    }
    paginationUL.innerHTML = '';
    // Loop through the number of pages and create a corresponding number of pagination anchors
@@ -107,8 +102,12 @@ function appendPageLinks(list) {
    pageDiv.appendChild(paginationDiv);
    // Set the first page to show up by default when the user opens the page
    paginationUL.querySelector('a').className = 'active';
-   showActivePage();
+   // Set the HTML of the list UL to call the function showActivePage. This will populate the page
+   // with the first page list items
+   pageUL.innerHTML = showActivePage();
 
+   //Event listener that listens to a user's click on a pagination link and sets that 
+   //link's class to Active and removes the Active class from all other pagination links
    let links = paginationUL.querySelectorAll('a');
    paginationUL.addEventListener('click', (e) => {
       if (e.target.tagName == 'A') {
@@ -117,15 +116,26 @@ function appendPageLinks(list) {
          }
          e.target.className = 'active';   
       }
-   showActivePage();  
+   // Set the HTML of the list UL to call the function showActivePage. This will populate the page
+   // with the list items in the page corresponding to the active pagination link
+   pageUL.innerHTML = showActivePage();  
    });
  
 }
 
+//Call the function appendPageLinks to display the paginated full list of students when the user
+//opens the page the first time
 appendPageLinks(studentList);
 
+//Set a search event listener to listen for a user's input and pass the resultant search results array to
+//the appendPageLinks function
 searchForm.addEventListener('submit', (event) => {
    event.preventDefault();
+   //Initialize search results array and string
+   let searchResultsArr = [];
+   let searchResultsStr = '';
+   //Check if each student name contains the input search term, change the list item's display to 'none'
+   //if it doesn't
    for (let i = 0; i < studentList.length; i++) {
       let studentName = studentList[i].querySelector('h3').textContent;
       if (studentName.includes(searchInput.value)) {
@@ -149,10 +159,14 @@ searchForm.addEventListener('submit', (event) => {
    } else {
       noSearchResults.style.display = 'none';
       }
+   
+   for (let i = 0; i < searchResultsArr.length;  i++) {
+      searchResultsStr += `${searchResultsArr[i].outerHTML} `;
+   }
+   //Assign the HTML content of the list UL to the search results string
+   pageUL.innerHTML = searchResultsStr;
+   //Call the function appendPageLinks on the search results array
    appendPageLinks(searchResultsArr);
 });
 
 
-
-
-// Remember to delete the comments that came with this file, and replace them with your own code comments.
